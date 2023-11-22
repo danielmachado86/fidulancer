@@ -1,6 +1,6 @@
 import { RequestHandler } from "express";
 import createHttpError from "http-errors";
-import mongoose, { Types } from "mongoose";
+import mongoose from "mongoose";
 import ContractModel from "../models/contract";
 import { assertIsDefined } from "../util/assertIsDefined";
 
@@ -11,7 +11,10 @@ export const getContracts: RequestHandler = async (req, res, next) => {
         assertIsDefined(authenticatedUserId);
 
         const contracts = await ContractModel.find({
-            owner: req.session.userId,
+            $or: [
+                { owner: authenticatedUserId },
+                { parties: authenticatedUserId },
+            ],
         }).exec();
         res.status(200).json(contracts);
     } catch (error) {
@@ -29,48 +32,22 @@ export const getContract: RequestHandler = async (req, res, next) => {
         if (!mongoose.isValidObjectId(contractId)) {
             throw createHttpError(400, "Invalid id");
         }
-        const contract = await ContractModel.aggregate([
-            { $match: { _id: new Types.ObjectId(contractId) } },
-            {
-                $lookup: {
-                    from: "facts",
-                    let: { contractId: "$_id" },
-                    pipeline: [
-                        {
-                            $match: {
-                                $expr: { $eq: ["$contractId", "$$contractId"] },
-                            },
-                        },
-                    ],
-                    as: "facts",
-                },
-            },
-            {
-                $project: {
-                    _id: 1,
-                    type: 1,
-                    parties: 1,
-                    "facts._id": 1,
-                    "facts.name": 1,
-                    "facts.value": 1,
-                    "facts.unit": 1,
-                },
-            },
-        ]);
+        const contract = await ContractModel.findById(contractId);
 
-
-const count = contract[0].parties.filter(party => {
-    if (party._id.equals(authenticatedUserId)) {
-      return true;
-    }
-  
-    return false;
-  }).length;
-
-        if(!contract[0].owner.equals(authenticatedUserId) || ){
-
+        if (!contract) {
+            throw createHttpError(404, "Contract not found");
         }
-        res.status(200).json(contract[0]);
+
+        const isOwner = contract.owner.equals(authenticatedUserId);
+
+        const isParty = contract.parties.some((party) => {
+            return party._id.equals(authenticatedUserId);
+        });
+
+        if (!isOwner && !isParty) {
+            throw createHttpError(401, "You cannot access this note");
+        }
+        res.status(200).json(contract);
     } catch (error) {
         next(error);
     }
