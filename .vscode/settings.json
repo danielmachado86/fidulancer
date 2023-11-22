@@ -2,5 +2,6 @@
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "emmet.includeLanguages": {
     "javascript": "javascriptreact"
-  }
+  },
+  "prettier.tabWidth": 4
 }
