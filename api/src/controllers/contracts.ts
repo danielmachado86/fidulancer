@@ -30,7 +30,7 @@ export const getContract: RequestHandler = async (req, res, next) => {
         assertIsDefined(authenticatedUserId);
 
         if (!mongoose.isValidObjectId(contractId)) {
-            throw createHttpError(400, "Invalid id");
+            throw createHttpError(400, "Invalid contract id");
         }
         const contract = await ContractModel.findById(contractId);
 
@@ -45,7 +45,7 @@ export const getContract: RequestHandler = async (req, res, next) => {
         });
 
         if (!isOwner && !isParty) {
-            throw createHttpError(401, "You cannot access this note");
+            throw createHttpError(401, "You cannot access this contract");
         }
         res.status(200).json(contract);
     } catch (error) {
@@ -53,16 +53,97 @@ export const getContract: RequestHandler = async (req, res, next) => {
     }
 };
 
-export const createContract: RequestHandler = async (req, res, next) => {
+interface CreateContractBody {
+    type?: string;
+}
+
+export const createContract: RequestHandler<
+    unknown,
+    unknown,
+    CreateContractBody,
+    unknown
+> = async (req, res, next) => {
     const type = req.body.type;
     const authenticatedUserId = req.session.userId;
     try {
+        if (!type) {
+            throw createHttpError(
+                400,
+                "Must send the type field to create a contract"
+            );
+        }
+
         const newContract = await ContractModel.create({
             type: type,
             owner: authenticatedUserId,
         });
 
         res.status(201).json(newContract);
+    } catch (error) {
+        next(error);
+    }
+};
+
+interface UpdateContractParams {
+    contractId: string;
+}
+
+interface UpdateContractBody {
+    type?: string;
+}
+
+export const updateContract: RequestHandler<
+    UpdateContractParams,
+    unknown,
+    UpdateContractBody,
+    unknown
+> = async (req, res, next) => {
+    const contractId = req.params.contractId;
+    const newType = req.body.type;
+
+    try {
+        if (!mongoose.isValidObjectId(contractId)) {
+            throw createHttpError(400, "Invalid contract id");
+        }
+        if (!newType) {
+            throw createHttpError(
+                400,
+                "Must send the type field to create a contract"
+            );
+        }
+
+        const contract = await ContractModel.findById(contractId).exec();
+
+        if (!contract) {
+            throw createHttpError(404, "Contract not found");
+        }
+
+        contract.type = newType;
+
+        const updatedContract = await contract.save();
+
+        res.status(200).json(updatedContract);
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const deleteContract: RequestHandler = async (req, res, next) => {
+    const contractId = req.params.contractId;
+
+    try {
+        if (!mongoose.isValidObjectId(contractId)) {
+            throw createHttpError(400, "Invalid contract id");
+        }
+
+        const contract = await ContractModel.findById(contractId).exec();
+        if (!contract) {
+            throw createHttpError(404, "Contract not found");
+        }
+
+        await contract.deleteOne();
+
+        res.sendStatus(204);
     } catch (error) {
         next(error);
     }

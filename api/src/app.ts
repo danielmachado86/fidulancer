@@ -2,6 +2,7 @@ import MongoStore from "connect-mongo";
 import "dotenv/config";
 import express, { NextFunction, Request, Response } from "express";
 import session from "express-session";
+import createHttpError, { isHttpError } from "http-errors";
 import morgan from "morgan";
 import contractsRoutes from "./routes/contracts";
 import factsRoutes from "./routes/facts";
@@ -34,7 +35,7 @@ app.use("/api/contracts/:contractId/facts", factsRoutes);
 app.use("/api/users", usersRoutes);
 
 app.use((req, res, next) => {
-    next(new Error("Endpoint not found."));
+    next(createHttpError(404, "Endpoint not found."));
 });
 
 app.use(
@@ -42,8 +43,12 @@ app.use(
     (error: unknown, req: Request, res: Response, next: NextFunction) => {
         console.error(error);
         let errorMessage = "An unknown error ocurred";
-        if (error instanceof Error) errorMessage = error.message;
-        res.status(500).json({ error: errorMessage });
+        let statusCode = 500;
+        if (isHttpError(error)){
+            statusCode= error.status;
+            errorMessage = error.message;
+        }
+        res.status(statusCode).json({ error: errorMessage });
     }
 );
 

@@ -7,5 +7,7 @@ const router = express.Router();
 router.get("/", requiresAuth, ContractController.getContracts);
 router.get("/:contractId", requiresAuth, ContractController.getContract);
 router.post("/", requiresAuth, ContractController.createContract);
+router.patch("/:contractId", requiresAuth, ContractController.updateContract);
+router.delete("/:contractId", requiresAuth, ContractController.deleteContract);
 
 export default router;

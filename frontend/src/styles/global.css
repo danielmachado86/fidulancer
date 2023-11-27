@@ -1,0 +1,18 @@
+@import url("https://fonts.googleapis.com/css?family=Nunito");
+
+body {
+    margin: 0;
+    background: #fafafa;
+    font-family: -apple-system, BlinkMacSystemFont, "Nunito", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+html {
+    font-size: 62.5%;
+}
+
+code {
+    font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
+        monospace;
+}
