@@ -1,9 +1,9 @@
-import { User } from "./user";
-
 export interface Contract {
     _id: string;
+    owner: string;
+    name: string;
     type: string;
-    parties: [User];
+    parties: [string];
     createdAt: string;
     updatedAt: string;
 }

@@ -58,6 +58,15 @@ const AddEditContractDialog = ({
                     onSubmit={handleSubmit(onSubmit)}
                 >
                     <TextInputField
+                        name="name"
+                        label="Name"
+                        type="text"
+                        placeholder="Name"
+                        register={register}
+                        registerOptions={{ required: "Required" }}
+                        error={errors.name}
+                    />
+                    <TextInputField
                         name="type"
                         label="Type"
                         type="text"

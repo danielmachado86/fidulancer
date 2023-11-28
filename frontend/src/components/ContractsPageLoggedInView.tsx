@@ -1,13 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-    Badge,
-    Button,
-    Col,
-    ProgressBar,
-    Row,
-    Spinner,
-    Table,
-} from "react-bootstrap";
+import { Button, Col, Row, Spinner, Table } from "react-bootstrap";
 import { FaPlus } from "react-icons/fa";
 import { Contract as ContractModel } from "../models/contract";
 import * as ContractsApi from "../network/contracts_api";
@@ -78,53 +70,37 @@ const ContractsPageLoggedInView = () => {
             <thead>
                 <tr>
                     <th>Name</th>
-                    <th>Start Date</th>
-                    <th>Status</th>
-                    <th>Completion</th>
                     <th>Type</th>
+                    {/* <th>Start Date</th> */}
+                    {/* <th>Status</th> */}
+                    {/* <th>Completion</th> */}
                     <th>Parties</th>
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td className="text-nowrap">d-001</td>
-                    <td className="text-nowrap">Graphic Designer Freelance</td>
-                    <td className="text-nowrap">nov 24 2023</td>
-                    <td>
-                        <Badge bg="info">Active</Badge>
-                    </td>
-                    <td>
-                        <div className={`d-flex flex-column flex-lg-row gap-2`}>
-                            <div>35%</div>
-                            <ProgressBar
-                                title="progress-bar"
-                                className={`w-100`}
-                                variant="success"
-                                now={35}
-                            />
-                        </div>
-                    </td>
-                    <td>
-                        <a
-                            href="/"
-                            className={`btn btn-sm btn-secondary text-nowrap`}
-                        >
-                            Daniel Machado
-                        </a>
-                        <a
-                            href="/"
-                            className={`btn btn-sm btn-secondary text-nowrap`}
-                        >
-                            Jimena Lopez
-                        </a>
-                        <a
-                            href="/"
-                            className={`btn btn-sm btn-secondary text-nowrap`}
-                        >
-                            Natalia Machado Castillo
-                        </a>
-                    </td>
-                </tr>
+                {contracts.map((contract) => {
+                    return (
+                        <tr key={contract._id}>
+                            <td>{contract.name}</td>
+                            <td>{contract.type}</td>
+                            {/* <td>nov. 24 2023</td> */}
+                            {/* <td>
+                                <Badge bg="info">Active</Badge>
+                            </td> */}
+                            {/* <td>
+                                <div>
+                                    <div>35%</div>
+                                    <ProgressBar
+                                        title="progress-bar"
+                                        variant="success"
+                                        now={35}
+                                    />
+                                </div>
+                            </td> */}
+                            <td>{contract.parties}</td>
+                        </tr>
+                    );
+                })}
             </tbody>
         </Table>
     );

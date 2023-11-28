@@ -56,6 +56,7 @@ export async function fetchContracts(): Promise<Contract[]> {
 }
 
 export interface ContractInput {
+    name: string;
     type: string;
 }
 
