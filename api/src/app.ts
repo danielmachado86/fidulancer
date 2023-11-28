@@ -6,7 +6,9 @@ import createHttpError, { isHttpError } from "http-errors";
 import morgan from "morgan";
 import contractsRoutes from "./routes/contracts";
 import factsRoutes from "./routes/facts";
+import partiesRoutes from "./routes/parties";
 import usersRoutes from "./routes/users";
+
 import env from "./util/validateEnv";
 
 const app = express();
@@ -33,6 +35,7 @@ app.use(
 app.use("/api/contracts", contractsRoutes);
 app.use("/api/contracts/:contractId/facts", factsRoutes);
 app.use("/api/users", usersRoutes);
+app.use("/api/parties", partiesRoutes);
 
 app.use((req, res, next) => {
     next(createHttpError(404, "Endpoint not found."));
@@ -44,8 +47,8 @@ app.use(
         console.error(error);
         let errorMessage = "An unknown error ocurred";
         let statusCode = 500;
-        if (isHttpError(error)){
-            statusCode= error.status;
+        if (isHttpError(error)) {
+            statusCode = error.status;
             errorMessage = error.message;
         }
         res.status(statusCode).json({ error: errorMessage });

@@ -2,6 +2,7 @@ import { RequestHandler } from "express";
 import createHttpError from "http-errors";
 import mongoose from "mongoose";
 import ContractModel from "../models/contract";
+import PartyModel from "../models/party";
 import { assertIsDefined } from "../util/assertIsDefined";
 
 export const getContracts: RequestHandler = async (req, res, next) => {
@@ -86,6 +87,15 @@ export const createContract: RequestHandler<
             name: name,
             type: type,
             owner: authenticatedUserId,
+        });
+
+        await PartyModel.create({
+            contractId: newContract._id,
+            userId: authenticatedUserId,
+            role: "owner",
+            status: "approved",
+            requestDate: new Date(),
+            responseDate: new Date(),
         });
 
         res.status(201).json(newContract);
