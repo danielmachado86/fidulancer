@@ -9,6 +9,16 @@ interface GetPartiesQueryParams {
     contractId?: string;
 }
 
+interface GetPartiesUserIdQueryFields {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    userId?: string;
+}
+
+interface GetPartiesContractIdQueryFields {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    contractId?: string;
+}
+
 export const getParties: RequestHandler<
     unknown,
     unknown,
@@ -21,24 +31,26 @@ export const getParties: RequestHandler<
     try {
         assertIsDefined(authenticatedUserId);
 
+        const query: GetPartiesQueryFields = {};
+        if (contractId) {
+            query.contractId = contractId;
+        } else {
+            query.userId = authenticatedUserId;
+        }
+
         if (!mongoose.isValidObjectId(contractId) && contractId) {
             throw createHttpError(400, "Invalid contract id");
         }
 
-        const parties = await PartyModel.find({
-            userId: authenticatedUserId,
-        })
-            .where("contractId")
-            .equals(contractId)
-            .exec();
+        const parties = await PartyModel.find(query);
 
-        // const isParty = parties.some((party) => {
-        //     return party.userId.equals(authenticatedUserId);
-        // });
+        const isParty = parties.some((party) => {
+            return party.userId.equals(authenticatedUserId);
+        });
 
-        // if (!isParty) {
-        //     throw createHttpError(401, "You cannot access this parties");
-        // }
+        if (parties && !isParty) {
+            throw createHttpError(401, "You cannot access this parties");
+        }
 
         res.status(200).json(parties);
     } catch (error) {
