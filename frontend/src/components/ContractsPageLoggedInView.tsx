@@ -2,7 +2,10 @@ import { useEffect, useState } from "react";
 import { Button, Col, Row, Spinner, Table } from "react-bootstrap";
 import { FaPlus } from "react-icons/fa";
 import { Contract as ContractModel } from "../models/contract";
+import { Party as PartyModel } from "../models/party";
+
 import * as ContractsApi from "../network/contracts_api";
+import * as PartiesApi from "../network/parties_api";
 import styles from "../styles/ContractsPage.module.css";
 import styleUtils from "../styles/utils.module.css";
 import AddEditContractDialog from "./AddEditContractDialog";
@@ -10,6 +13,8 @@ import Contract from "./Contract";
 
 const ContractsPageLoggedInView = () => {
     const [contracts, setContracts] = useState<ContractModel[]>([]);
+    const [parties, setParties] = useState<PartyModel[]>([]);
+
     const [contractsLoading, setContractsLoading] = useState(true);
     const [showContractsLoadingError, setShowContractsLoadingError] =
         useState(false);
@@ -25,7 +30,10 @@ const ContractsPageLoggedInView = () => {
                 setShowContractsLoadingError(false);
                 setContractsLoading(true);
                 const contracts = await ContractsApi.fetchContracts();
+                const parties = await PartiesApi.fetchParties();
+
                 setContracts(contracts);
+                setParties(parties);
             } catch (error) {
                 console.error(error);
                 setShowContractsLoadingError(true);
@@ -97,7 +105,11 @@ const ContractsPageLoggedInView = () => {
                                     />
                                 </div>
                             </td> */}
-                            <td>{contract.parties}</td>
+                            <td>
+                                {parties.map((party) => {
+                                    return party._id;
+                                })}
+                            </td>
                         </tr>
                     );
                 })}

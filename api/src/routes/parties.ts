@@ -5,7 +5,7 @@ import { requiresAuth } from "../middleware/auth";
 const router = express.Router();
 
 router.get("/", requiresAuth, PartyController.getParties);
-router.get("/:partyd", requiresAuth, PartyController.getParty);
+router.get("/:partyId", requiresAuth, PartyController.getParty);
 router.post("/", requiresAuth, PartyController.createParty);
 // router.patch("/:partyd", requiresAuth, PartyController.updateContract);
 // router.delete("/:partyd", requiresAuth, PartyController.deleteContract);

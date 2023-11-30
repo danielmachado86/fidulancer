@@ -1,16 +1,6 @@
 import { Contract } from "../models/contract";
 import { User } from "../models/user";
-
-async function fetchData(input: RequestInfo, init?: RequestInit) {
-    const response = await fetch(input, init);
-    if (response.ok) {
-        return response;
-    } else {
-        const errorBody = await response.json();
-        const errorMessage = errorBody.error;
-        throw Error(errorMessage);
-    }
-}
+import { fetchData } from "../utils/fetchData";
 
 export async function getLoggedInUser(): Promise<User> {
     const response = await fetchData("/api/users", { method: "GET" });

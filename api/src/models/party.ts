@@ -14,5 +14,5 @@ const partySchema = new Schema({
     expiredDate: { type: Date },
 });
 
-type partyType = InferSchemaType<typeof partySchema>;
-export default model<partyType>("Party", partySchema);
+export type PartyType = InferSchemaType<typeof partySchema>;
+export default model<PartyType>("Party", partySchema);

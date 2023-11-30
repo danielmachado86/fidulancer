@@ -9,16 +9,6 @@ interface GetPartiesQueryParams {
     contractId?: string;
 }
 
-interface GetPartiesUserIdQueryFields {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    userId?: string;
-}
-
-interface GetPartiesContractIdQueryFields {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    contractId?: string;
-}
-
 export const getParties: RequestHandler<
     unknown,
     unknown,
@@ -31,18 +21,18 @@ export const getParties: RequestHandler<
     try {
         assertIsDefined(authenticatedUserId);
 
-        const query: GetPartiesQueryFields = {};
-        if (contractId) {
-            query.contractId = contractId;
-        } else {
-            query.userId = authenticatedUserId;
-        }
-
         if (!mongoose.isValidObjectId(contractId) && contractId) {
             throw createHttpError(400, "Invalid contract id");
         }
 
-        const parties = await PartyModel.find(query);
+        let parties;
+        if (contractId) {
+            parties = await PartyModel.find({ contractId: contractId });
+        } else {
+            parties = await PartyModel.find({
+                userId: authenticatedUserId,
+            });
+        }
 
         const isParty = parties.some((party) => {
             return party.userId.equals(authenticatedUserId);
@@ -58,7 +48,16 @@ export const getParties: RequestHandler<
     }
 };
 
-export const getParty: RequestHandler = async (req, res, next) => {
+interface getPartyParams {
+    partyId: string;
+}
+
+export const getParty: RequestHandler<
+    getPartyParams,
+    unknown,
+    unknown,
+    unknown
+> = async (req, res, next) => {
     const authenticatedUserId = req.session.userId;
     const partyId = req.params.partyId;
 
@@ -69,15 +68,20 @@ export const getParty: RequestHandler = async (req, res, next) => {
             throw createHttpError(400, "Invalid party id");
         }
 
-        const party = await PartyModel.findById(partyId);
+        const party = await PartyModel.findById(partyId).exec();
+
         if (!party) {
             throw createHttpError(404, "Party not found");
         }
 
-        const parties = await PartyModel.find({ contractId: party._id });
-        const isParty = parties.some((party) => {
-            return party.userId.equals(authenticatedUserId);
+        const parties = await PartyModel.find({
+            contractId: party.contractId,
+        }).exec();
+
+        const isParty = parties.some((item) => {
+            return item.userId.equals(authenticatedUserId);
         });
+
         if (!isParty) {
             throw createHttpError(401, "You cannot access this party");
         }
@@ -150,6 +154,9 @@ export const createParty: RequestHandler<
             status: "requested",
             requestDate: new Date(),
         });
+
+        contract.parties.push(newParty.id);
+        contract.save();
 
         res.status(201).json(newParty);
     } catch (error) {
