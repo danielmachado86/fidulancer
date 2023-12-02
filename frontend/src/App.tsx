@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
 import { Container } from "react-bootstrap";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import LoginModal from "./components/LoginModal";
 import NavBar from "./components/NavBar";
 import SignUpModal from "./components/SignUpModal";
 import { User } from "./models/user";
 import * as ContractsApi from "./network/contracts_api";
-import ContractsPage from "./pages/ContractsPages";
 import styles from "./styles/App.module.css";
 
 function App() {
@@ -27,52 +26,79 @@ function App() {
     }, []);
 
     return (
-        <BrowserRouter>
-            <div>
-                <NavBar
-                    loggedInUser={loggedInUser}
-                    onLoginClicked={() => setShowLoginModal(true)}
-                    onSignUpClicked={() => setShowSignUpModal(true)}
-                    onLogoutSuccessful={() => setLoggedInUser(null)}
-                />
+        <div>
+            <NavBar
+                loggedInUser={loggedInUser}
+                onLoginClicked={() => setShowLoginModal(true)}
+                onSignUpClicked={() => setShowSignUpModal(true)}
+                onLogoutSuccessful={() => setLoggedInUser(null)}
+            />
+            <Router>
                 <Container className={styles.pageContainer}>
                     <Routes>
                         <Route
-                            path="/"
+                            path="new/basic"
                             element={
-                                <ContractsPage loggedInUser={loggedInUser} />
+                                loggedInUser ? (
+                                    <div>Basic info page</div>
+                                ) : (
+                                    <div>Please log in...</div>
+                                )
                             }
                         />
-                        {/* <Route
-							path='/privacy'
-							element={<PrivacyPage />}
-						/>
-						<Route
-							path='/*'
-							element={<NotFoundPage />}
-						/> */}
+                        <Route
+                            path="new/terms"
+                            element={
+                                loggedInUser ? (
+                                    <div>Terms page</div>
+                                ) : (
+                                    <div>Please log in...</div>
+                                )
+                            }
+                        />
+                        <Route
+                            path="new/parties"
+                            element={
+                                loggedInUser ? (
+                                    <div>Parties page</div>
+                                ) : (
+                                    <div>Please log in...</div>
+                                )
+                            }
+                        />
+                        <Route
+                            path="new/confirm"
+                            element={
+                                loggedInUser ? (
+                                    <div>Confirm page</div>
+                                ) : (
+                                    <div>Please log in...</div>
+                                )
+                            }
+                        />
+                        <Route path="/*" element={<div>Not found page</div>} />
                     </Routes>
                 </Container>
-                {showSignUpModal && (
-                    <SignUpModal
-                        onDismiss={() => setShowSignUpModal(false)}
-                        onSignUpSuccessful={(user) => {
-                            setLoggedInUser(user);
-                            setShowSignUpModal(false);
-                        }}
-                    />
-                )}
-                {showLoginModal && (
-                    <LoginModal
-                        onDismiss={() => setShowLoginModal(false)}
-                        onLoginSuccessful={(user) => {
-                            setLoggedInUser(user);
-                            setShowLoginModal(false);
-                        }}
-                    />
-                )}
-            </div>
-        </BrowserRouter>
+            </Router>
+            {showSignUpModal && (
+                <SignUpModal
+                    onDismiss={() => setShowSignUpModal(false)}
+                    onSignUpSuccessful={(user) => {
+                        setLoggedInUser(user);
+                        setShowSignUpModal(false);
+                    }}
+                />
+            )}
+            {showLoginModal && (
+                <LoginModal
+                    onDismiss={() => setShowLoginModal(false)}
+                    onLoginSuccessful={(user) => {
+                        setLoggedInUser(user);
+                        setShowLoginModal(false);
+                    }}
+                />
+            )}
+        </div>
     );
 }
 

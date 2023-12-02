@@ -11,12 +11,17 @@ export const getContracts: RequestHandler = async (req, res, next) => {
     try {
         assertIsDefined(authenticatedUserId);
 
+        const parties = await PartyModel.find({ userId: authenticatedUserId });
+        const partyIds = parties.map((party) => party.id);
+
         const contracts = await ContractModel.find({
-            $or: [
-                { owner: authenticatedUserId },
-                { parties: authenticatedUserId },
-            ],
-        }).exec();
+            parties: { $in: partyIds },
+        })
+            .populate({
+                path: "parties",
+                populate: "userId",
+            })
+            .exec();
         res.status(200).json(contracts);
     } catch (error) {
         next(error);
@@ -39,13 +44,11 @@ export const getContract: RequestHandler = async (req, res, next) => {
             throw createHttpError(404, "Contract not found");
         }
 
-        const isOwner = contract.owner.equals(authenticatedUserId);
-
         const isParty = contract.parties.some((party) => {
             return party._id.equals(authenticatedUserId);
         });
 
-        if (!isOwner && !isParty) {
+        if (!isParty) {
             throw createHttpError(401, "You cannot access this contract");
         }
         res.status(200).json(contract);
@@ -83,20 +86,41 @@ export const createContract: RequestHandler<
             );
         }
 
-        const newContract = await ContractModel.create({
-            name: name,
-            type: type,
-            owner: authenticatedUserId,
-        });
-
-        await PartyModel.create({
-            contractId: newContract._id,
+        const newParty = new PartyModel({
             userId: authenticatedUserId,
             role: "owner",
             status: "approved",
             requestDate: new Date(),
             responseDate: new Date(),
         });
+
+        const newContract = new ContractModel({
+            name: name,
+            type: type,
+            parties: [newParty._id],
+        });
+
+        const error = newContract.validateSync();
+        if (error) {
+            throw createHttpError(
+                400,
+                "Any contract needs to have at least 1 party"
+            );
+        }
+
+        newParty.contractId = newContract._id;
+
+        await newParty.save();
+
+        await newContract
+            .save()
+            .then((t) =>
+                t.populate({
+                    path: "parties",
+                    populate: "userId",
+                })
+            )
+            .then((t) => t);
 
         res.status(201).json(newContract);
     } catch (error) {
@@ -149,7 +173,15 @@ export const updateContract: RequestHandler<
         contract.name = newName;
         contract.type = newType;
 
-        const updatedContract = await contract.save();
+        const updatedContract = await contract
+            .save()
+            .then((t) =>
+                t.populate({
+                    path: "parties",
+                    populate: "userId",
+                })
+            )
+            .then((t) => t);
 
         res.status(200).json(updatedContract);
     } catch (error) {

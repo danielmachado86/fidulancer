@@ -2,7 +2,7 @@ import { InferSchemaType, Schema, model } from "mongoose";
 
 const partySchema = new Schema({
     contractId: { type: Schema.Types.ObjectId, required: true },
-    userId: { type: Schema.Types.ObjectId, required: true },
+    userId: { type: Schema.Types.ObjectId, required: true, ref: "User" },
     role: { type: String, enum: ["owner", "party"], required: true },
     status: {
         type: String,

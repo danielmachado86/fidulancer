@@ -9,12 +9,14 @@ export async function fetchParties(): Promise<Party[]> {
 }
 
 export type PartyInput = {
-    contractId: string;
     userId: string;
 };
 
-export async function createParty(party: PartyInput): Promise<Party> {
-    const response = await fetchData("/api/parties", {
+export async function createParty(
+    contractId: string,
+    party: PartyInput
+): Promise<Party> {
+    const response = await fetchData("/api/parties?contractId=" + contractId, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",

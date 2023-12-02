@@ -3,6 +3,8 @@ import createHttpError from "http-errors";
 import mongoose from "mongoose";
 import ContractModel from "../models/contract";
 import PartyModel from "../models/party";
+import UserModel from "../models/user";
+
 import { assertIsDefined } from "../util/assertIsDefined";
 
 interface GetPartiesQueryParams {
@@ -92,8 +94,11 @@ export const getParty: RequestHandler<
     }
 };
 
-interface CreatePartyBody {
+interface CreatePartyQueryParams {
     contractId?: string;
+}
+
+interface CreatePartyBody {
     userId?: string;
 }
 
@@ -101,9 +106,9 @@ export const createParty: RequestHandler<
     unknown,
     unknown,
     CreatePartyBody,
-    unknown
+    CreatePartyQueryParams
 > = async (req, res, next) => {
-    const contractId = req.body.contractId;
+    const contractId = req.query.contractId;
     const userId = req.body.userId;
     const authenticatedUserId = req.session.userId;
     try {
@@ -120,17 +125,23 @@ export const createParty: RequestHandler<
         if (!userId) {
             throw createHttpError(
                 400,
-                "Must send the owner field to create a party"
+                "Must send the userId field to create a party"
             );
         }
         if (!mongoose.isValidObjectId(userId)) {
-            throw createHttpError(400, "Invalid owner id");
+            throw createHttpError(400, "Invalid user id");
         }
 
         const contract = await ContractModel.findById(contractId);
 
         if (!contract) {
             throw createHttpError(404, "Contract not found");
+        }
+
+        const user = await UserModel.findById(userId);
+
+        if (!user) {
+            throw createHttpError(404, "User not found");
         }
 
         const parties = await PartyModel.find({ contractId: contractId });
@@ -147,7 +158,7 @@ export const createParty: RequestHandler<
             );
         }
 
-        const newParty = await PartyModel.create({
+        const newParty = new PartyModel({
             contractId: contractId,
             userId: userId,
             role: "party",
@@ -155,8 +166,9 @@ export const createParty: RequestHandler<
             requestDate: new Date(),
         });
 
+        await newParty.save();
         contract.parties.push(newParty.id);
-        contract.save();
+        await contract.save();
 
         res.status(201).json(newParty);
     } catch (error) {

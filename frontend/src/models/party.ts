@@ -1,7 +1,9 @@
+import { User } from "./user";
+
 export interface Party {
     _id: string;
     contractId: string;
-    userId: string;
+    userId: User;
     role: string;
     status: string;
     requestDate: string;

@@ -22,6 +22,7 @@ const AddEditContractDialog = ({
         formState: { errors, isSubmitting },
     } = useForm<ContractInput>({
         defaultValues: {
+            name: contractToEdit?.name || "",
             type: contractToEdit?.type || "",
         },
     });
