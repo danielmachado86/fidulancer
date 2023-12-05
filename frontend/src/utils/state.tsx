@@ -1,15 +1,29 @@
 import { ReactNode, createContext, useContext, useState } from "react";
+import { Contract } from "../models/contract";
 
-export const AppStateContext = createContext({});
-
-interface Props {
+type Props = {
     children?: ReactNode;
-}
+};
+
+type INewContractProps = {
+    newContract: Partial<Contract>;
+    setNewContract: (newState: Partial<Contract>) => void;
+};
+
+let emptyContract: Partial<Contract> = {};
+
+const initialContract = {
+    newContract: emptyContract,
+    setNewContract: () => {},
+};
+
+export const AppStateContext =
+    createContext<INewContractProps>(initialContract);
 
 export function AppProvider({ children }: Props) {
-    const value = useState({});
+    const [newContract, setNewContract] = useState(initialContract.newContract);
     return (
-        <AppStateContext.Provider value={value}>
+        <AppStateContext.Provider value={{ newContract, setNewContract }}>
             {children}
         </AppStateContext.Provider>
     );

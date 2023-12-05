@@ -6,7 +6,10 @@ import NavBar from "./components/NavBar";
 import SignUpModal from "./components/SignUpModal";
 import { User } from "./models/user";
 import * as ContractsApi from "./network/contracts_api";
+import { BasicPage } from "./pages/new/BasicPage";
+import { TermsPage } from "./pages/new/TermsPage";
 import styles from "./styles/App.module.css";
+import { AppProvider } from "./utils/state";
 
 function App() {
     const [loggedInUser, setLoggedInUser] = useState<User | null>(null);
@@ -33,53 +36,58 @@ function App() {
                 onSignUpClicked={() => setShowSignUpModal(true)}
                 onLogoutSuccessful={() => setLoggedInUser(null)}
             />
-            <Router>
-                <Container className={styles.pageContainer}>
-                    <Routes>
-                        <Route
-                            path="new/basic"
-                            element={
-                                loggedInUser ? (
-                                    <div>Basic info page</div>
-                                ) : (
-                                    <div>Please log in...</div>
-                                )
-                            }
-                        />
-                        <Route
-                            path="new/terms"
-                            element={
-                                loggedInUser ? (
-                                    <div>Terms page</div>
-                                ) : (
-                                    <div>Please log in...</div>
-                                )
-                            }
-                        />
-                        <Route
-                            path="new/parties"
-                            element={
-                                loggedInUser ? (
-                                    <div>Parties page</div>
-                                ) : (
-                                    <div>Please log in...</div>
-                                )
-                            }
-                        />
-                        <Route
-                            path="new/confirm"
-                            element={
-                                loggedInUser ? (
-                                    <div>Confirm page</div>
-                                ) : (
-                                    <div>Please log in...</div>
-                                )
-                            }
-                        />
-                        <Route path="/*" element={<div>Not found page</div>} />
-                    </Routes>
-                </Container>
-            </Router>
+            <Container className={styles.pageContainer}>
+                <AppProvider>
+                    <Router>
+                        <Routes>
+                            <Route
+                                path="new/basic"
+                                element={
+                                    loggedInUser ? (
+                                        <BasicPage />
+                                    ) : (
+                                        <div>Please log in...</div>
+                                    )
+                                }
+                            />
+                            <Route
+                                path="new/terms"
+                                element={
+                                    loggedInUser ? (
+                                        <TermsPage />
+                                    ) : (
+                                        <div>Please log in...</div>
+                                    )
+                                }
+                            />
+                            <Route
+                                path="new/parties"
+                                element={
+                                    loggedInUser ? (
+                                        <div>Parties page</div>
+                                    ) : (
+                                        <div>Please log in...</div>
+                                    )
+                                }
+                            />
+                            <Route
+                                path="new/confirm"
+                                element={
+                                    loggedInUser ? (
+                                        <div>Confirm page</div>
+                                    ) : (
+                                        <div>Please log in...</div>
+                                    )
+                                }
+                            />
+                            <Route
+                                path="/*"
+                                element={<div>Not found page</div>}
+                            />
+                        </Routes>
+                    </Router>
+                </AppProvider>
+            </Container>
             {showSignUpModal && (
                 <SignUpModal
                     onDismiss={() => setShowSignUpModal(false)}
