@@ -3,7 +3,6 @@
 import { Button, Form } from "react-bootstrap";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
-import TextInputField from "../../components/form/TextInputField";
 import { Contract } from "../../models/contract";
 
 import { useAppState } from "../../utils/state";
@@ -26,24 +25,32 @@ export const BasicPage = () => {
         <Form onSubmit={handleSubmit(saveData)}>
             <fieldset>
                 <legend>Basic Info</legend>
-                <TextInputField
-                    name="name"
-                    label="Name"
-                    type="text"
-                    placeholder="Name"
-                    register={register}
-                    registerOptions={{ required: "Required" }}
-                    error={errors.name}
-                />
-                <TextInputField
-                    name="type"
-                    label="Type"
-                    type="text"
-                    placeholder="Type"
-                    register={register}
-                    registerOptions={{ required: "Required" }}
-                    error={errors.type}
-                />
+                <Form>
+                    <div className="mb-3">
+                        <Form.Check // prettier-ignore
+                            type="radio"
+                            id="rs-radio"
+                            name="group1"
+                            label="Real state lease"
+                        />
+                    </div>
+                    <div className="mb-3">
+                        <Form.Check // prettier-ignore
+                            type="radio"
+                            id="fr-radio"
+                            name="group1"
+                            label="Freelance"
+                        />
+                    </div>
+                    <div className="mb-3">
+                        <Form.Check // prettier-ignore
+                            type="radio"
+                            id="sp-radio"
+                            name="group1"
+                            label="Sales and Purchase Agreement"
+                        />
+                    </div>
+                </Form>
                 <Button type="submit">Next {">"}</Button>
             </fieldset>
         </Form>

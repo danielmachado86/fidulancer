@@ -1,8 +1,7 @@
 import { InferSchemaType, Schema, model } from "mongoose";
 
-const termSchema = new Schema(
+const termTemplateSchema = new Schema(
     {
-        contractId: { type: Schema.Types.ObjectId, required: true },
         name: { type: String, required: true },
         facts: [
             {
@@ -12,9 +11,10 @@ const termSchema = new Schema(
                 },
             },
         ],
+        category: { type: String },
     },
     { timestamps: true }
 );
 
-type termType = InferSchemaType<typeof termSchema>;
-export default model<termType>("Term", termSchema);
+type termTemplateType = InferSchemaType<typeof termTemplateSchema>;
+export default model<termTemplateType>("TermTemplate", termTemplateSchema);
