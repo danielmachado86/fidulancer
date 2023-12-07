@@ -3,15 +3,11 @@ import { InferSchemaType, Schema, model } from "mongoose";
 const termSchema = new Schema(
     {
         contractId: { type: Schema.Types.ObjectId, required: true },
-        name: { type: String, required: true },
-        facts: [
-            {
-                type: {
-                    name: { type: string, required: true },
-                    value: { type: Schema.Types.Mixed },
-                },
-            },
-        ],
+        baseTermId: {
+            type: Schema.Types.ObjectId,
+            required: true,
+            ref: "BaseTerm",
+        },
     },
     { timestamps: true }
 );
