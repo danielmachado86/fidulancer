@@ -1,46 +1,58 @@
 export const fullTerms = [
     {
-        name: "end_date",
+        name: "fixed_term",
         category: "",
         facts: [
-            { name: "start_date", input_type: "date" },
             { name: "duration", input_type: "number" },
             { name: "duration_unit", value: "month" },
-            { name: "open_ended" },
         ],
-        result: { name: "end_date" },
     },
     {
-        name: "open_ended",
+        name: "indefinite_term",
         category: "",
-        facts: [],
-        result: { name: "open_ended" },
+        facts: [
+            { name: "duration", value: null },
+            { name: "duration_unit", value: null },
+        ],
     },
     {
-        name: "payment_schedule",
+        name: "start_date",
         category: "",
-        facts: [],
-        result: { name: "payment_schedule", value: "recurring" },
+        facts: [
+            { name: "signatures" },
+            { name: "start_date", input_type: "date" },
+        ],
     },
     {
-        name: "monthly_recurring_payment_schedule",
-        category: "",
-        facts: [],
-        result: { name: "payment_recurrence", value: "month" },
-    },
-    {
-        name: "recurring_payment_schedule",
+        name: "end_date",
         category: "",
         facts: [
             { name: "start_date" },
             { name: "duration" },
             { name: "duration_unit" },
-            { name: "payment_value", input_type: "number" },
-            { name: "payment_currency", value: "COP" },
-            { name: "end_date" },
+        ],
+    },
+    {
+        name: "payment_schedule",
+        category: "",
+        facts: [
+            { name: "payment_schedule", input_type: "string" }, // Options: recurring, advance, installments, progress
+        ],
+    },
+    {
+        name: "payment_recurrence",
+        category: "",
+        facts: [
+            { name: "payment_recurrence", input_type: "string" }, // Options: day, week, month, year
+        ],
+    },
+    {
+        name: "monthly_recurring_payment_schedule",
+        category: "",
+        facts: [
+            { name: "payment_schedule", value: "recurring" },
             { name: "payment_recurrence", value: "month" },
         ],
-        result: { name: "payment_schedule" },
     },
     {
         name: "termination_notice",
@@ -49,13 +61,22 @@ export const fullTerms = [
             { name: "notice_period", input_type: "number" },
             { name: "end_date" },
         ],
-        result: { name: "termination_notice_date" },
+    },
+    {
+        name: "grace_period",
+        category: "",
+        facts: [
+            { name: "grace_period", input_type: "number" },
+            { name: "grace_period_unit", input_type: "string" }, // Options: day, week, month, year
+        ],
     },
     {
         name: "payment_grace_period_5_days",
         category: "",
-        facts: [],
-        result: { name: "grace_period", value: 5, unit: "day" },
+        facts: [
+            { name: "grace_period", value: 5 },
+            { name: "grace_period_unit", value: "day" },
+        ],
     },
 ];
 

@@ -13,13 +13,6 @@ const baseTermSchema = new Schema(
             },
         ],
         category: { type: String },
-        result: {
-            type: {
-                name: { type: String, required: true },
-                value: { type: Schema.Types.Mixed },
-            },
-            _id: false,
-        },
     },
     { timestamps: true, versionKey: false }
 );

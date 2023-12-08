@@ -40,13 +40,11 @@ export const createBaseTerm: RequestHandler = async (req, res, next) => {
     const name = req.body.name;
     const facts = req.body.facts;
     const category = req.body.category;
-    const result = req.body.result;
     try {
         const newBaseTerm = await BaseTermModel.create({
             name: name,
             facts: facts,
             category: category,
-            result: result,
         });
 
         res.status(201).json(newBaseTerm);
