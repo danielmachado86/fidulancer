@@ -1,6 +1,7 @@
 export const fullTerms = [
     {
         name: "fixed_term",
+        description: "",
         category: "",
         facts: [
             { name: "duration", input_type: "number" },
@@ -9,6 +10,7 @@ export const fullTerms = [
     },
     {
         name: "indefinite_term",
+        description: "",
         category: "",
         facts: [
             { name: "duration", value: null },
@@ -17,6 +19,7 @@ export const fullTerms = [
     },
     {
         name: "start_date",
+        description: "",
         category: "",
         facts: [
             { name: "signatures" },
@@ -25,6 +28,7 @@ export const fullTerms = [
     },
     {
         name: "end_date",
+        description: "",
         category: "",
         facts: [
             { name: "start_date" },
@@ -33,21 +37,65 @@ export const fullTerms = [
         ],
     },
     {
-        name: "payment_schedule",
+        name: "payment_type",
+        description: "",
         category: "",
         facts: [
-            { name: "payment_schedule", input_type: "string" }, // Options: recurring, advance, installments, progress
+            { name: "payment_type", input_type: "string" }, // Options: recurring, installments, progress, one_payment
+        ],
+    },
+    {
+        name: "payment_term",
+        description: "",
+        category: "",
+        facts: [
+            { name: "payment_term", input_type: "string" }, // Options: advance, arrears, net-30, net-60, net-90
         ],
     },
     {
         name: "payment_recurrence",
+        description: "",
         category: "",
         facts: [
             { name: "payment_recurrence", input_type: "string" }, // Options: day, week, month, year
         ],
     },
     {
+        name: "payment_amount",
+        description: "",
+        category: "",
+        facts: [
+            { name: "payment_amount", input_type: "number" }, // Options: day, week, month, year
+            { name: "payment_currency", input_type: "string" }, // Options: COP, USD
+        ],
+    },
+    {
+        name: "avanced_payment",
+        description: "",
+        category: "",
+        facts: [
+            { name: "payment_term", value: "advance" }, // Options: day, week, month, year
+        ],
+    },
+    {
+        name: "number_of_payments",
+        description: "",
+        category: "",
+        facts: [{ name: "payment_schedule" }, { name: "payment_recurrence" }],
+    },
+    {
+        name: "payment_period",
+        description: "",
+        category: "",
+        facts: [
+            { name: "payment_schedule" }, // Options: day, week, month, year
+            { name: "payment_recurrence" }, // Options: COP, USD
+            { name: "payment_amount" }, // Options: COP, USD
+        ],
+    },
+    {
         name: "monthly_recurring_payment_schedule",
+        description: "",
         category: "",
         facts: [
             { name: "payment_schedule", value: "recurring" },
@@ -56,6 +104,7 @@ export const fullTerms = [
     },
     {
         name: "termination_notice",
+        description: "",
         category: "",
         facts: [
             { name: "notice_period", input_type: "number" },
@@ -64,6 +113,7 @@ export const fullTerms = [
     },
     {
         name: "grace_period",
+        description: "",
         category: "",
         facts: [
             { name: "grace_period", input_type: "number" },
@@ -72,6 +122,7 @@ export const fullTerms = [
     },
     {
         name: "payment_grace_period_5_days",
+        description: "",
         category: "",
         facts: [
             { name: "grace_period", value: 5 },
