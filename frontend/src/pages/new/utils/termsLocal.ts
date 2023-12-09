@@ -28,8 +28,8 @@ export const fullTerms = [
         category: "",
         facts: [
             { name: "start_date" },
-            { name: "duration" },
-            { name: "duration_unit" },
+            { name: "fixed_term" },
+            { name: "indefinite_term" },
         ],
     },
     {
