@@ -1,10 +1,10 @@
 import { RequestHandler } from "express";
 import BaseTermModel from "../models/baseTerm";
 
-interface GetBaseTermsQueryParams {
+type GetBaseTermsQueryParams = {
     name?: string;
     category?: string;
-}
+};
 export const getBaseTerms: RequestHandler<
     unknown,
     unknown,
@@ -13,13 +13,6 @@ export const getBaseTerms: RequestHandler<
 > = async (req, res, next) => {
     const name = req.query.name;
     const category = req.query.category;
-
-    // if (name & category) {
-    //     createHttpError(
-    //         400,
-    //         "This endpoint can't be queried qith multiple params"
-    //     );
-    // }
 
     const query: GetBaseTermsQueryParams = {};
 
