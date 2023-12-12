@@ -5,7 +5,7 @@ export const fullTerms = [
         category: "",
         facts: [
             { name: "duration", input_type: "number" },
-            { name: "duration_unit", value: "month" },
+            { name: "duration_unit", input_type: "string" }, // Options: day, week, month, year
         ],
     },
     {
@@ -65,7 +65,7 @@ export const fullTerms = [
         description: "",
         category: "",
         facts: [
-            { name: "payment_amount", input_type: "number" }, // Options: day, week, month, year
+            { name: "payment_amount", input_type: "number" },
             { name: "payment_currency", input_type: "string" }, // Options: COP, USD
         ],
     },
@@ -73,9 +73,7 @@ export const fullTerms = [
         name: "avanced_payment",
         description: "",
         category: "",
-        facts: [
-            { name: "payment_term", value: "advance" }, // Options: day, week, month, year
-        ],
+        facts: [{ name: "payment_term", value: "advance" }],
     },
     {
         name: "number_of_payments",

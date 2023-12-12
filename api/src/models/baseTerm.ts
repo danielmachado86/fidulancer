@@ -9,6 +9,7 @@ const baseTermSchema = new Schema(
                     name: { type: String, required: true },
                     input_type: { type: String },
                     value: { type: Schema.Types.Mixed },
+                    _id: false,
                 },
             },
         ],

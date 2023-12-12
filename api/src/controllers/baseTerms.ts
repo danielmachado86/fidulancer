@@ -1,25 +1,48 @@
 import { RequestHandler } from "express";
+import createHttpError from "http-errors";
 import BaseTermModel from "../models/baseTerm";
 
-export const getBaseTerms: RequestHandler = async (req, res, next) => {
+interface GetBaseTermsQueryParams {
+    name?: string;
+    category?: string;
+}
+export const getBaseTerms: RequestHandler<
+    unknown,
+    unknown,
+    unknown,
+    GetBaseTermsQueryParams
+> = async (req, res, next) => {
     const name = req.query.name;
+    const category = req.query.category;
+
+    if (name & category) {
+        createHttpError(
+            400,
+            "This endpoint is not compatible with multiple query params"
+        );
+    }
+
     try {
-        let terms;
-        if (name) {
-            terms = await BaseTermModel.find({ name: name }).exec();
-        } else {
-            terms = await BaseTermModel.aggregate([
-                { $sort: { $createdAt: 1 } },
-                {
-                    $group: {
-                        _id: "$name",
-                        lastrecord: {
-                            $last: "$$ROOT",
-                        },
+        const terms = await BaseTermModel.aggregate([
+            {$match:}
+            { $sort: { createdAt: 1 } },
+            {
+                $group: {
+                    _id: "$name",
+                    lastrecord: {
+                        $last: "$$ROOT",
                     },
                 },
-            ]).exec();
-        }
+            },
+            {
+                $project: { lastrecord: 1, _id: 0 },
+            },
+            {
+                $replaceRoot: {
+                    newRoot: "$lastrecord",
+                },
+            },
+        ]).exec();
         res.status(200).json(terms);
     } catch (error) {
         next(error);

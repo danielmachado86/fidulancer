@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import TextInputField from "../../components/form/TextInputField";
 import { Contract } from "../../models/contract";
 
+import { useEffect } from "react";
 import { useAppState } from "../../utils/state";
 
 export const PartiesPage = () => {
@@ -21,6 +22,16 @@ export const PartiesPage = () => {
         setNewContract({ ...newContract, ...data });
         navigate("/new/parties");
     };
+
+    let [dogImage, setDogImage] = useState(null);
+
+    // 3. Create out useEffect function
+    useEffect(() => {
+        fetch("https://dog.ceo/api/breeds/image/random")
+            .then((response) => response.json())
+            // 4. Setting *dogImage* to the image url that we received from the response above
+            .then((data) => setDogImage(data.message));
+    }, []);
 
     return (
         <Form onSubmit={handleSubmit(saveData)}>
