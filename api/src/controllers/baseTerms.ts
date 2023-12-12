@@ -1,5 +1,4 @@
 import { RequestHandler } from "express";
-import createHttpError from "http-errors";
 import BaseTermModel from "../models/baseTerm";
 
 interface GetBaseTermsQueryParams {
@@ -15,16 +14,25 @@ export const getBaseTerms: RequestHandler<
     const name = req.query.name;
     const category = req.query.category;
 
-    if (name & category) {
-        createHttpError(
-            400,
-            "This endpoint is not compatible with multiple query params"
-        );
+    // if (name & category) {
+    //     createHttpError(
+    //         400,
+    //         "This endpoint can't be queried qith multiple params"
+    //     );
+    // }
+
+    const query: GetBaseTermsQueryParams = {};
+
+    if (name) {
+        query.name = name;
+    }
+    if (category) {
+        query.category = category;
     }
 
     try {
         const terms = await BaseTermModel.aggregate([
-            {$match:}
+            { $match: query },
             { $sort: { createdAt: 1 } },
             {
                 $group: {
