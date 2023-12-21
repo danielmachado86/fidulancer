@@ -60,7 +60,18 @@ export const getBaseTermsById: RequestHandler = async (req, res, next) => {
     }
 };
 
-export const createBaseTerm: RequestHandler = async (req, res, next) => {
+type CreateBaseTermBody = {
+    name?: string;
+    facts?: object[];
+    category?: string;
+};
+
+export const createBaseTerm: RequestHandler<
+    unknown,
+    unknown,
+    CreateBaseTermBody,
+    unknown
+> = async (req, res, next) => {
     const name = req.body.name;
     const facts = req.body.facts;
     const category = req.body.category;

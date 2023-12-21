@@ -12,9 +12,9 @@ const agreementTemplateSchema = new Schema(
             validate: [(v: []) => Array.isArray(v) && v.length > 0],
         },
         name: { type: String, required: true },
-        category: { type: String },
+        category: { type: String, required: true },
     },
-    { timestamps: true }
+    { timestamps: true, versionKey: false }
 );
 
 type agreementTemplateType = InferSchemaType<typeof agreementTemplateSchema>;

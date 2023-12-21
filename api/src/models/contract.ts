@@ -1,11 +1,18 @@
-import { InferSchemaType, Schema, model } from "mongoose";
+import { InferSchemaType, Model, Schema, Types, model } from "mongoose";
 
-const contractSchema = new Schema(
+// Document interface
+interface Contract {
+    parties: Types.ObjectId[];
+    name: string;
+    type?: string;
+}
+
+const contractSchema = new Schema<Contract, Model<Contract>>(
     {
         parties: {
             type: [
                 {
-                    type: Schema.Types.ObjectId,
+                    type: Types.ObjectId,
                     ref: "Party",
                 },
             ],

@@ -1,7 +1,7 @@
 import bcrypt from "bcrypt";
 import { RequestHandler } from "express";
 import createHttpError from "http-errors";
-import UserModel from "../models/user";
+import UserModel, { UserInput } from "../models/user";
 import { assertIsDefined } from "../util/assertIsDefined";
 
 export const getAuthenticatedUser: RequestHandler = async (req, res, next) => {
@@ -19,24 +19,18 @@ export const getAuthenticatedUser: RequestHandler = async (req, res, next) => {
     }
 };
 
-interface SignUpBody {
-    username?: string;
-    email?: string;
-    password?: string;
-}
-
 export const signUp: RequestHandler<
     unknown,
     unknown,
-    SignUpBody,
+    UserInput,
     unknown
 > = async (req, res, next) => {
     const username = req.body.username;
     const email = req.body.email;
-    const passwordRaw = req.body.password;
+    const password = req.body.password;
 
     try {
-        if (!username || !email || !passwordRaw) {
+        if (!username || !email || !password) {
             throw createHttpError(400, "Parameters missing");
         }
 
@@ -59,13 +53,10 @@ export const signUp: RequestHandler<
                 "A user with this email address already exists. Please log in instead."
             );
         }
-
-        const passwordHashed = await bcrypt.hash(passwordRaw, 10);
-
         const newUser = await UserModel.create({
             username: username,
             email: email,
-            password: passwordHashed,
+            password: password,
         });
 
         req.session.userId = newUser._id;
