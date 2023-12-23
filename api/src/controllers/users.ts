@@ -30,9 +30,9 @@ export const signUp: RequestHandler<
     const password = req.body.password;
 
     try {
-        if (!username || !email || !password) {
-            throw createHttpError(400, "Parameters missing");
-        }
+        // if (!username || !email || !password) {
+        //     throw createHttpError(400, "Parameters missing");
+        // }
 
         const existingUsername = await UserModel.findOne({
             username: username,
@@ -53,11 +53,14 @@ export const signUp: RequestHandler<
                 "A user with this email address already exists. Please log in instead."
             );
         }
-        const newUser = await UserModel.create({
+
+        const newUser = new UserModel({
             username: username,
             email: email,
             password: password,
         });
+
+        await newUser.save();
 
         req.session.userId = newUser._id;
 
