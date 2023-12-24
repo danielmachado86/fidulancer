@@ -1,50 +1,17 @@
-import bcrypt from "bcrypt";
-import { InferSchemaType, Model, Schema, model } from "mongoose";
+import { WithId } from "mongodb";
 import { z } from "zod";
+import { db } from "../db";
 
-const LoginSchema = z.object({
+export const LoginSchema = z.object({
     email: z.string().email(),
-    password: z.string(),
+    password: z.string().min(8),
 });
 
-const SignupSchema = LoginSchema.extend({
-    confirmPassword: z.string(),
+export const User = LoginSchema.extend({
+    name: z.string().min(1),
 });
 
-export type UserInput = {
-    email: string;
-    username: string;
-    password: string;
-};
-
-export type UserDocument = UserInput & {
-    _id: string;
-    createdAt: Date;
-    updatedAt: Date;
-    comparePassword(candidatePassword: string): Promise<boolean>;
-};
-
-const userSchema = new Schema<UserInput, Model<UserInput>>(
-    {
-        email: { type: String, required: true, unique: true },
-        username: { type: String, required: true, unique: true, select: false },
-        password: { type: String, required: true, select: false },
-    },
-    { timestamps: true }
-);
-
-userSchema.pre("save", async function (next) {
-    if (!this.isModified("password")) {
-        return next();
-    }
-
-    const salt = await bcrypt.genSalt(10);
-    const hash = await bcrypt.hashSync(this.password, salt);
-
-    this.password = hash;
-
-    return next();
-});
-
-type userType = InferSchemaType<typeof userSchema>;
-export default model<userType>("User", userSchema);
+export type User = z.infer<typeof User>;
+export type LoginSchema = z.infer<typeof LoginSchema>;
+export type UserWithId = WithId<User>;
+export const Users = db.collection<User>("users");
