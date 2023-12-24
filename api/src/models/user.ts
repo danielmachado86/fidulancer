@@ -1,5 +1,15 @@
 import bcrypt from "bcrypt";
 import { InferSchemaType, Model, Schema, model } from "mongoose";
+import { z } from "zod";
+
+const LoginSchema = z.object({
+    email: z.string().email(),
+    password: z.string(),
+});
+
+const SignupSchema = LoginSchema.extend({
+    confirmPassword: z.string(),
+});
 
 export type UserInput = {
     email: string;
