@@ -2,7 +2,7 @@ import bcrypt from "bcrypt";
 import { RequestHandler } from "express";
 import createHttpError from "http-errors";
 import { ObjectId } from "mongodb";
-import { LoginSchema, User, UserWithId, Users } from "../models/user";
+import { LoginSchema, UserDocument, UserWithId, Users } from "../models/user";
 import { assertIsDefined } from "../util/assertIsDefined";
 
 export const getAuthenticatedUser: RequestHandler = async (req, res, next) => {
@@ -23,7 +23,7 @@ export const getAuthenticatedUser: RequestHandler = async (req, res, next) => {
 export const signUp: RequestHandler<
     unknown,
     UserWithId,
-    User,
+    UserDocument,
     unknown
 > = async (req, res, next) => {
     try {
