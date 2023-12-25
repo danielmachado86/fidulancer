@@ -11,7 +11,13 @@ export const User = LoginSchema.extend({
     name: z.string().min(1),
 });
 
+export const UserDocument = User.extend({
+    createdAt: z.date().default(() => new Date()),
+    updatedAt: z.date().default(() => new Date()),
+});
+
 export type User = z.infer<typeof User>;
 export type LoginSchema = z.infer<typeof LoginSchema>;
-export type UserWithId = WithId<User>;
-export const Users = db.collection<User>("users");
+export type UserDocument = z.infer<typeof UserDocument>;
+export type UserWithId = WithId<UserDocument>;
+export const Users = db.collection<UserDocument>("users");
