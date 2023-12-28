@@ -1,28 +1,25 @@
-import { InferSchemaType, Model, Schema, Types, model } from "mongoose";
+import { ObjectId } from "mongodb";
+import { z } from "zod";
+import { db } from "../db";
+import { PartyBaseDocument } from "./party";
 
-// Document interface
-interface Contract {
-    parties: Types.ObjectId[];
-    name: string;
-    type?: string;
-}
+export const ContractInterface = z.object({
+    name: z.string().min(3),
+    type: z.string().min(3),
+});
 
-const contractSchema = new Schema<Contract, Model<Contract>>(
-    {
-        parties: {
-            type: [
-                {
-                    type: Types.ObjectId,
-                    ref: "Party",
-                },
-            ],
-            validate: [(v: []) => Array.isArray(v) && v.length > 0],
-        },
-        name: { type: String, required: true },
-        type: { type: String },
-    },
-    { timestamps: true }
-);
+export const ContractBaseDocument = ContractInterface.extend({
+    _id: z.instanceof(ObjectId).default(() => new ObjectId()),
+    parties: z.array(z.instanceof(ObjectId)).default(() => []),
+    createdAt: z.date().default(() => new Date()),
+    updatedAt: z.date().default(() => new Date()),
+});
 
-type contractType = InferSchemaType<typeof contractSchema>;
-export default model<contractType>("Contract", contractSchema);
+export const ContractDocument = ContractBaseDocument.extend({
+    parties: z.array(PartyBaseDocument).min(1),
+});
+
+export type Contract = z.infer<typeof ContractInterface>;
+export type ContractBaseDocument = z.infer<typeof ContractBaseDocument>;
+export type ContractDocument = z.infer<typeof ContractDocument>;
+export const Contracts = db.collection<ContractBaseDocument>("contracts");
