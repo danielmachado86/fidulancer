@@ -1,18 +1,29 @@
-import { InferSchemaType, Schema, model } from "mongoose";
+import { ObjectId } from "mongodb";
+import { z } from "zod";
+import { db } from "../db";
 
-const partySchema = new Schema({
-    contractId: { type: Schema.Types.ObjectId, required: true },
-    userId: { type: Schema.Types.ObjectId, required: true, ref: "User" },
-    role: { type: String, enum: ["owner", "party"], required: true },
-    status: {
-        type: String,
-        enum: ["requested", "approved", "denied", "expired"],
-        required: true,
-    },
-    requestDate: { type: Date },
-    responseDate: { type: Date },
-    expiredDate: { type: Date },
+const RoleEnum = z.enum(["owner", "party"]);
+const StatusEnum = z.enum(["requested", "approved", "denied", "expired"]);
+
+export const PartyInterface = z.object({
+    userId: z.instanceof(ObjectId),
 });
 
-export type PartyType = InferSchemaType<typeof partySchema>;
-export default model<PartyType>("Party", partySchema);
+export const Party = PartyInterface.extend({
+    role: RoleEnum,
+    status: StatusEnum,
+    requestDate: z.date().default(() => new Date()),
+    responseDate: z.date().optional(),
+    expiredDate: z.date().optional(),
+});
+
+export const PartyBaseDocument = Party.extend({
+    _id: z.instanceof(ObjectId).default(() => new ObjectId()),
+    createdAt: z.date().default(() => new Date()),
+    updatedAt: z.date().default(() => new Date()),
+});
+
+export type PartyInterface = z.infer<typeof PartyInterface>;
+export type Party = z.infer<typeof Party>;
+export type PartyBaseDocument = z.infer<typeof PartyBaseDocument>;
+export const Parties = db.collection<PartyBaseDocument>("parties");
