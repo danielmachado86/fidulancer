@@ -2,10 +2,15 @@ import bcrypt from "bcrypt";
 import { RequestHandler } from "express";
 import createHttpError from "http-errors";
 import { ObjectId } from "mongodb";
-import { LoginSchema, UserDocument, UserWithId, Users } from "../models/user";
+import { LoginSchema, UserBaseDocument, Users } from "../models/user";
 import { assertIsDefined } from "../util/assertIsDefined";
 
-export const getAuthenticatedUser: RequestHandler = async (req, res, next) => {
+export const getAuthenticatedUser: RequestHandler<
+    unknown,
+    Omit<UserBaseDocument, "password">,
+    unknown,
+    unknown
+> = async (req, res, next) => {
     const authenticatedUserId = req.session.userId;
 
     try {
@@ -14,7 +19,14 @@ export const getAuthenticatedUser: RequestHandler = async (req, res, next) => {
         const user = await Users.findOne({
             _id: new ObjectId(req.session.userId),
         });
-        res.status(200).json(user);
+        if (!user) {
+            throw createHttpError(404, "User not found");
+        }
+        // Remove password field from the response
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { password, ...userWithoutPassword } = user;
+
+        res.status(200).json(userWithoutPassword);
     } catch (error) {
         next(error);
     }
@@ -22,8 +34,8 @@ export const getAuthenticatedUser: RequestHandler = async (req, res, next) => {
 
 export const signUp: RequestHandler<
     unknown,
-    UserWithId,
-    UserDocument,
+    Omit<UserBaseDocument, "password">,
+    UserBaseDocument,
     unknown
 > = async (req, res, next) => {
     try {
@@ -36,16 +48,18 @@ export const signUp: RequestHandler<
             );
         }
 
+        // Remove password field from the response
+        const { password, ...userWithoutPassword } = req.body;
+
         const salt = await bcrypt.genSalt(10);
-        req.body.password = await bcrypt.hashSync(req.body.password, salt);
+        req.body.password = await bcrypt.hashSync(password, salt);
 
         const newUser = await Users.insertOne(req.body);
 
         req.session.userId = newUser.insertedId;
 
-        res.status(201).json({
-            _id: newUser.insertedId,
-            ...req.body,
+        return res.status(201).json({
+            ...userWithoutPassword,
         });
     } catch (error) {
         next(error);
@@ -54,28 +68,28 @@ export const signUp: RequestHandler<
 
 export const login: RequestHandler<
     unknown,
-    unknown,
+    Omit<UserBaseDocument, "password">,
     LoginSchema,
     unknown
 > = async (req, res, next) => {
-    const email = req.body.email;
-    const password = req.body.password;
-
     try {
-        const user = await Users.findOne({ email: email });
+        const user = await Users.findOne({ email: req.body.email });
 
         if (!user) {
             throw createHttpError(401, "Invalid credentials");
         }
 
-        const passwordMatch = await bcrypt.compare(password, user.password);
+        // Remove password field from the response
+        const { password, ...userWithoutPassword } = user;
+
+        const passwordMatch = await bcrypt.compare(req.body.password, password);
 
         if (!passwordMatch) {
             throw createHttpError(401, "Invalid credentials");
         }
 
         req.session.userId = user._id;
-        res.status(201).json(user);
+        res.status(201).json(userWithoutPassword);
     } catch (error) {
         next(error);
     }
