@@ -1,9 +1,9 @@
 import { RequestHandler } from "express";
 import createHttpError from "http-errors";
-import mongoose from "mongoose";
-import ContractModel from "../models/contract";
-import PartyModel from "../models/party";
-import UserModel from "../models/user";
+import { ObjectId } from "mongodb";
+import { ContractDocument, Contracts } from "../models/contract";
+import { Parties, PartyBaseDocument } from "../models/party";
+import { Users } from "../models/user";
 
 import { assertIsDefined } from "../util/assertIsDefined";
 
@@ -17,34 +17,49 @@ export const getParties: RequestHandler<
     unknown,
     GetPartiesQueryParams
 > = async (req, res, next) => {
-    const authenticatedUserId = req.session.userId;
-    const contractId = req.query.contractId;
+    const authenticatedUserId = new ObjectId(req.session.userId);
 
     try {
+        const contractId = new ObjectId(req.query.contractId);
         assertIsDefined(authenticatedUserId);
 
-        if (!mongoose.isValidObjectId(contractId) && contractId) {
-            throw createHttpError(400, "Invalid contract id");
-        }
-
-        let parties;
-        if (contractId) {
-            parties = await PartyModel.find({ contractId: contractId });
-        } else {
-            parties = await PartyModel.find({
+        if (!contractId) {
+            const parties = await Parties.find({
                 userId: authenticatedUserId,
-            });
+            }).toArray();
+
+            return res.status(200).json(parties);
         }
 
-        const isParty = parties.some((party) => {
+        const contracts = await Contracts.aggregate<ContractDocument>([
+            {
+                $match: {
+                    _id: contractId,
+                },
+            },
+            {
+                $lookup: {
+                    from: "parties",
+                    localField: "parties",
+                    foreignField: "_id",
+                    as: "parties",
+                },
+            },
+        ]).toArray();
+
+        if (contracts.length === 0) {
+            throw createHttpError(404, "Parties not found");
+        }
+
+        const isParty = contracts[0].parties.some((party) => {
             return party.userId.equals(authenticatedUserId);
         });
 
-        if (parties && !isParty) {
+        if (!isParty) {
             throw createHttpError(401, "You cannot access this parties");
         }
 
-        res.status(200).json(parties);
+        return res.status(200).json(contracts[0].parties);
     } catch (error) {
         next(error);
     }
@@ -60,31 +75,40 @@ export const getParty: RequestHandler<
     unknown,
     unknown
 > = async (req, res, next) => {
-    const authenticatedUserId = req.session.userId;
-    const partyId = req.params.partyId;
+    const authenticatedUserId = new ObjectId(req.session.userId);
 
     try {
+        const partyId = new ObjectId(req.params.partyId);
+
         assertIsDefined(authenticatedUserId);
 
-        if (!mongoose.isValidObjectId(partyId)) {
-            throw createHttpError(400, "Invalid party id");
-        }
+        //q: find the contract that has this partyId
+        const contracts = await Contracts.aggregate<ContractDocument>([
+            {
+                $match: {
+                    parties: partyId,
+                },
+            },
+            {
+                $lookup: {
+                    from: "parties",
+                    localField: "parties",
+                    foreignField: "_id",
+                    as: "parties",
+                },
+            },
+        ]).toArray();
 
-        const party = await PartyModel.findById(partyId).exec();
-
-        if (!party) {
+        if (contracts.length === 0) {
             throw createHttpError(404, "Party not found");
         }
 
-        const parties = await PartyModel.find({
-            contractId: party.contractId,
-        }).exec();
-
-        const isParty = parties.some((item) => {
-            return item.userId.equals(authenticatedUserId);
+        //q: find the party in contracts array that has this partyId
+        const party = contracts[0].parties.filter((party) => {
+            return party._id.equals(partyId);
         });
 
-        if (!isParty) {
+        if (!party) {
             throw createHttpError(401, "You cannot access this party");
         }
 
@@ -98,28 +122,21 @@ interface CreatePartyQueryParams {
     contractId?: string;
 }
 
-interface CreatePartyBody {
-    userId?: string;
-}
-
 export const createParty: RequestHandler<
     unknown,
     unknown,
-    CreatePartyBody,
+    PartyBaseDocument,
     CreatePartyQueryParams
 > = async (req, res, next) => {
-    const contractId = req.query.contractId;
-    const userId = req.body.userId;
-    const authenticatedUserId = req.session.userId;
+    const authenticatedUserId = new ObjectId(req.session.userId);
     try {
+        const contractId = new ObjectId(req.query.contractId);
+        const userId = new ObjectId(req.body.userId);
         if (!contractId) {
             throw createHttpError(
                 400,
                 "Must send contractId field to create a party"
             );
-        }
-        if (!mongoose.isValidObjectId(contractId)) {
-            throw createHttpError(400, "Invalid contract id");
         }
 
         if (!userId) {
@@ -128,24 +145,34 @@ export const createParty: RequestHandler<
                 "Must send the userId field to create a party"
             );
         }
-        if (!mongoose.isValidObjectId(userId)) {
-            throw createHttpError(400, "Invalid user id");
-        }
 
-        const contract = await ContractModel.findById(contractId);
+        const contracts = await Contracts.aggregate<ContractDocument>([
+            {
+                $match: {
+                    _id: contractId,
+                },
+            },
+            {
+                $lookup: {
+                    from: "parties",
+                    localField: "parties",
+                    foreignField: "_id",
+                    as: "parties",
+                },
+            },
+        ]).toArray();
 
-        if (!contract) {
+        if (contracts.length === 0) {
             throw createHttpError(404, "Contract not found");
         }
 
-        const user = await UserModel.findById(userId);
+        const user = await Users.find({ _id: userId });
 
         if (!user) {
             throw createHttpError(404, "User not found");
         }
 
-        const parties = await PartyModel.find({ contractId: contractId });
-        const isOwner = parties.some((party) => {
+        const isOwner = contracts[0].parties.some((party) => {
             return (
                 party.userId.equals(authenticatedUserId) &&
                 party.role === "owner"
@@ -158,94 +185,96 @@ export const createParty: RequestHandler<
             );
         }
 
-        const newParty = new PartyModel({
-            contractId: contractId,
+        const party = {
             userId: userId,
             role: "party",
             status: "requested",
             requestDate: new Date(),
-        });
+        };
 
-        await newParty.save();
-        contract.parties.push(newParty.id);
-        await contract.save();
+        const newParty = await Parties.insertOne(party);
 
-        res.status(201).json(newParty);
+        Contracts.updateOne(
+            { _id: contractId },
+            { $push: { parties: newParty.insertedId } }
+        );
+
+        res.status(201).json({ _id: newParty.insertedId, ...party });
     } catch (error) {
         next(error);
     }
 };
 
-// interface UpdateContractParams {
-//     contractId: string;
-// }
+// // interface UpdateContractParams {
+// //     contractId: string;
+// // }
 
-// interface UpdateContractBody {
-//     name?: string;
-//     type?: string;
-// }
+// // interface UpdateContractBody {
+// //     name?: string;
+// //     type?: string;
+// // }
 
-// export const updateContract: RequestHandler<
-//     UpdateContractParams,
-//     unknown,
-//     UpdateContractBody,
-//     unknown
-// > = async (req, res, next) => {
-//     const contractId = req.params.contractId;
-//     const newName = req.body.name;
-//     const newType = req.body.type;
+// // export const updateContract: RequestHandler<
+// //     UpdateContractParams,
+// //     unknown,
+// //     UpdateContractBody,
+// //     unknown
+// // > = async (req, res, next) => {
+// //     const contractId = req.params.contractId;
+// //     const newName = req.body.name;
+// //     const newType = req.body.type;
 
-//     try {
-//         if (!mongoose.isValidObjectId(contractId)) {
-//             throw createHttpError(400, "Invalid contract id");
-//         }
-//         if (!newName) {
-//             throw createHttpError(
-//                 400,
-//                 "Must send the type field to create a contract"
-//             );
-//         }
-//         if (!newType) {
-//             throw createHttpError(
-//                 400,
-//                 "Must send the type field to create a contract"
-//             );
-//         }
+// //     try {
+// //         if (!mongoose.isValidObjectId(contractId)) {
+// //             throw createHttpError(400, "Invalid contract id");
+// //         }
+// //         if (!newName) {
+// //             throw createHttpError(
+// //                 400,
+// //                 "Must send the type field to create a contract"
+// //             );
+// //         }
+// //         if (!newType) {
+// //             throw createHttpError(
+// //                 400,
+// //                 "Must send the type field to create a contract"
+// //             );
+// //         }
 
-//         const contract = await PartyModel.findById(contractId).exec();
+// //         const contract = await PartyModel.findById(contractId).exec();
 
-//         if (!contract) {
-//             throw createHttpError(404, "Contract not found");
-//         }
+// //         if (!contract) {
+// //             throw createHttpError(404, "Contract not found");
+// //         }
 
-//         contract.name = newName;
-//         contract.type = newType;
+// //         contract.name = newName;
+// //         contract.type = newType;
 
-//         const updatedContract = await contract.save();
+// //         const updatedContract = await contract.save();
 
-//         res.status(200).json(updatedContract);
-//     } catch (error) {
-//         next(error);
-//     }
-// };
+// //         res.status(200).json(updatedContract);
+// //     } catch (error) {
+// //         next(error);
+// //     }
+// // };
 
-// export const deleteContract: RequestHandler = async (req, res, next) => {
-//     const contractId = req.params.contractId;
+// // export const deleteContract: RequestHandler = async (req, res, next) => {
+// //     const contractId = req.params.contractId;
 
-//     try {
-//         if (!mongoose.isValidObjectId(contractId)) {
-//             throw createHttpError(400, "Invalid contract id");
-//         }
+// //     try {
+// //         if (!mongoose.isValidObjectId(contractId)) {
+// //             throw createHttpError(400, "Invalid contract id");
+// //         }
 
-//         const contract = await PartyModel.findById(contractId).exec();
-//         if (!contract) {
-//             throw createHttpError(404, "Contract not found");
-//         }
+// //         const contract = await PartyModel.findById(contractId).exec();
+// //         if (!contract) {
+// //             throw createHttpError(404, "Contract not found");
+// //         }
 
-//         await contract.deleteOne();
+// //         await contract.deleteOne();
 
-//         res.sendStatus(204);
-//     } catch (error) {
-//         next(error);
-//     }
-// };
+// //         res.sendStatus(204);
+// //     } catch (error) {
+// //         next(error);
+// //     }
+// // };
