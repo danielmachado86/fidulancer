@@ -2,16 +2,18 @@ import { ObjectId } from "mongodb";
 import { z } from "zod";
 import { db } from "../db";
 
-const RoleEnum = z.enum(["owner", "party"]);
-const StatusEnum = z.enum(["requested", "approved", "denied", "expired"]);
-
 export const PartyInterface = z.object({
-    userId: z.instanceof(ObjectId),
+    userId: z
+        .object()
+        .min(24)
+        .transform((value) => new ObjectId(value)),
 });
 
 export const Party = PartyInterface.extend({
-    role: RoleEnum,
-    status: StatusEnum,
+    role: z.enum(["owner", "party"]).default("owner"),
+    status: z
+        .enum(["requested", "approved", "denied", "expired"])
+        .default("requested"),
     requestDate: z.date().default(() => new Date()),
     responseDate: z.date().optional(),
     expiredDate: z.date().optional(),
