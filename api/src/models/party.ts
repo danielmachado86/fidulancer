@@ -4,7 +4,7 @@ import { db } from "../db";
 
 export const PartyInterface = z.object({
     userId: z
-        .object()
+        .string()
         .min(24)
         .transform((value) => new ObjectId(value)),
 });
