@@ -88,7 +88,7 @@ export const createContract: RequestHandler<
     ContractDocument,
     unknown
 > = async (req, res, next) => {
-    const authenticatedUserId = new ObjectId(req.session.userId);
+    const authenticatedUserId = req.session.userId;
     try {
         assertIsDefined(authenticatedUserId);
 
