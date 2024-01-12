@@ -1,6 +1,6 @@
 import { RequestHandler } from "express";
 import createHttpError from "http-errors";
-import { ObjectId } from "mongodb";
+import { FindOptions, ObjectId } from "mongodb";
 import { ContractDocument, Contracts } from "../models/contract";
 import { Parties, PartyBaseDocument } from "../models/party";
 import { Users } from "../models/user";
@@ -162,17 +162,30 @@ export const createParty: RequestHandler<
             },
         ]).toArray();
 
+        await ContractDocument.parse(contracts[0]);
+        await PartyBaseDocument.parse(contracts[0].parties[0]);
+
         if (contracts.length === 0) {
             throw createHttpError(404, "Contract not found");
         }
 
-        const user = await Users.find({ _id: userId });
+        //q: how to make a query in mongodb that returns a user without the password?
+        // Assuming you have a "users" collection in MongoDB
+
+        const projection: FindOptions["projection"] = { password: 0 };
+
+        const user = await Users.findOne(
+            { _id: userId }, // Your query criteria
+            { projection } // Projection to exclude the password field
+        );
 
         if (!user) {
             throw createHttpError(404, "User not found");
         }
 
         const isOwner = contracts[0].parties.some((party) => {
+            console.log(party.userId, authenticatedUserId);
+
             return (
                 party.userId.equals(authenticatedUserId) &&
                 party.role === "owner"
@@ -185,21 +198,14 @@ export const createParty: RequestHandler<
             );
         }
 
-        const party = {
-            userId: userId,
-            role: "party",
-            status: "requested",
-            requestDate: new Date(),
-        };
-
-        const newParty = await Parties.insertOne(party);
+        const newParty = await Parties.insertOne(req.body);
 
         Contracts.updateOne(
             { _id: contractId },
             { $push: { parties: newParty.insertedId } }
         );
 
-        res.status(201).json({ _id: newParty.insertedId, ...party });
+        res.status(201).json({ ...req.body });
     } catch (error) {
         next(error);
     }
