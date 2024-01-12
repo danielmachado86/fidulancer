@@ -56,7 +56,7 @@ export const signUp: RequestHandler<
 
         const newUser = await Users.insertOne(req.body);
 
-        req.session.userId = newUser.insertedId;
+        req.session.userId = newUser.insertedId.toString();
 
         return res.status(201).json({
             ...userWithoutPassword,
@@ -88,7 +88,7 @@ export const login: RequestHandler<
             throw createHttpError(401, "Invalid credentials");
         }
 
-        req.session.userId = user._id;
+        req.session.userId = user._id.toString();
         res.status(201).json(userWithoutPassword);
     } catch (error) {
         next(error);
