@@ -20,16 +20,17 @@ export const getParties: RequestHandler<
     const authenticatedUserId = new ObjectId(req.session.userId);
 
     try {
-        const contractId = new ObjectId(req.query.contractId);
         assertIsDefined(authenticatedUserId);
 
-        if (!contractId) {
+        if (!req.query.contractId) {
             const parties = await Parties.find({
                 userId: authenticatedUserId,
             }).toArray();
 
             return res.status(200).json(parties);
         }
+
+        const contractId = new ObjectId(req.query.contractId);
 
         const contracts = await Contracts.aggregate<ContractDocument>([
             {
@@ -128,8 +129,8 @@ export const createParty: RequestHandler<
     PartyBaseDocument,
     CreatePartyQueryParams
 > = async (req, res, next) => {
-    const authenticatedUserId = new ObjectId(req.session.userId);
     try {
+        const authenticatedUserId = new ObjectId(req.session.userId);
         const contractId = new ObjectId(req.query.contractId);
         const userId = new ObjectId(req.body.userId);
         if (!contractId) {
@@ -162,8 +163,8 @@ export const createParty: RequestHandler<
             },
         ]).toArray();
 
-        await ContractDocument.parse(contracts[0]);
-        await PartyBaseDocument.parse(contracts[0].parties[0]);
+        await ContractDocument.parseAsync(contracts[0]);
+        await PartyBaseDocument.parseAsync(contracts[0].parties[0]);
 
         if (contracts.length === 0) {
             throw createHttpError(404, "Contract not found");
