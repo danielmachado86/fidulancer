@@ -3,14 +3,17 @@ import { z } from "zod";
 import { db } from "../db";
 
 export const PartyInterface = z.object({
-    userId: z
-        .string()
-        .min(24)
-        .transform((value) => new ObjectId(value)),
+    userId: z.union([
+        z
+            .string()
+            .min(24)
+            .transform((value) => new ObjectId(value)),
+        z.instanceof(ObjectId),
+    ]),
 });
 
 export const Party = PartyInterface.extend({
-    role: z.enum(["owner", "party"]).default("owner"),
+    role: z.enum(["owner", "party"]).default("party"),
     status: z
         .enum(["requested", "approved", "denied", "expired"])
         .default("requested"),
