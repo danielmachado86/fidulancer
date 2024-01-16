@@ -5,6 +5,7 @@ import session from "express-session";
 import createHttpError, { isHttpError } from "http-errors";
 import morgan from "morgan";
 
+import baseTermsRoutes from "./routes/baseTerms";
 import contractsRoutes from "./routes/contracts";
 import partiesRoutes from "./routes/parties";
 import usersRoutes from "./routes/users";
@@ -36,7 +37,7 @@ app.use("/api/contracts", contractsRoutes);
 // app.use("/api/contracts/:contractId/facts", factsRoutes);
 app.use("/api/users", usersRoutes);
 app.use("/api/parties", partiesRoutes);
-// app.use("/api/baseTerms", baseTermsRoutes);
+app.use("/api/baseTerms", baseTermsRoutes);
 
 app.use((req, res, next) => {
     next(createHttpError(404, "Endpoint not found."));
