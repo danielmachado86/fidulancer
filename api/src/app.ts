@@ -8,6 +8,7 @@ import morgan from "morgan";
 import baseTermsRoutes from "./routes/baseTerms";
 import contractsRoutes from "./routes/contracts";
 import partiesRoutes from "./routes/parties";
+import termsRoutes from "./routes/terms";
 import usersRoutes from "./routes/users";
 
 import env from "./util/validateEnv";
@@ -38,6 +39,7 @@ app.use("/api/contracts", contractsRoutes);
 app.use("/api/users", usersRoutes);
 app.use("/api/parties", partiesRoutes);
 app.use("/api/baseTerms", baseTermsRoutes);
+app.use("/api/terms", termsRoutes);
 
 app.use((req, res, next) => {
     next(createHttpError(404, "Endpoint not found."));
