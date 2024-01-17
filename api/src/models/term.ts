@@ -1,16 +1,30 @@
-import { InferSchemaType, Schema, model } from "mongoose";
+import { ObjectId } from "mongodb";
+import { z } from "zod";
+import { db } from "../db";
 
-const termSchema = new Schema(
-    {
-        contractId: { type: Schema.Types.ObjectId, required: true },
-        baseTermId: {
-            type: Schema.Types.ObjectId,
-            required: true,
-            ref: "BaseTerm",
-        },
-    },
-    { timestamps: true }
-);
+export const TermInterface = z.object({
+    contractId: z.union([
+        z
+            .string()
+            .min(24)
+            .transform((value) => new ObjectId(value)),
+        z.instanceof(ObjectId),
+    ]),
+    baseTerm: z.union([
+        z
+            .string()
+            .min(24)
+            .transform((value) => new ObjectId(value)),
+        z.instanceof(ObjectId),
+    ]),
+});
 
-type termType = InferSchemaType<typeof termSchema>;
-export default model<termType>("Term", termSchema);
+export const TermBaseDocument = TermInterface.extend({
+    _id: z.instanceof(ObjectId).default(() => new ObjectId()),
+    createdAt: z.date().default(() => new Date()),
+    updatedAt: z.date().default(() => new Date()),
+});
+
+export type Term = z.infer<typeof TermInterface>;
+export type TermBaseDocument = z.infer<typeof TermBaseDocument>;
+export const Terms = db.collection<TermBaseDocument>("terms");
