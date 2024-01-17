@@ -1,5 +1,6 @@
 import { RequestHandler } from "express";
-import BaseTermModel from "../models/baseTerm";
+import { ObjectId } from "mongodb";
+import { BaseTermBaseDocument, BaseTerms } from "../models/baseTerm";
 
 type GetBaseTermsQueryParams = {
     name?: string;
@@ -24,7 +25,7 @@ export const getBaseTerms: RequestHandler<
     }
 
     try {
-        const terms = await BaseTermModel.aggregate([
+        const terms = await BaseTerms.aggregate([
             { $match: query },
             { $sort: { createdAt: 1 } },
             {
@@ -43,46 +44,49 @@ export const getBaseTerms: RequestHandler<
                     newRoot: "$lastrecord",
                 },
             },
-        ]).exec();
+        ]).toArray();
         res.status(200).json(terms);
     } catch (error) {
         next(error);
     }
 };
 
-export const getBaseTermsById: RequestHandler = async (req, res, next) => {
-    const id = req.params.id;
+type GetBaseTermsByIdUrlParams = {
+    id: string;
+};
+
+export const getBaseTermsById: RequestHandler<
+    GetBaseTermsByIdUrlParams,
+    unknown,
+    unknown,
+    unknown
+> = async (req, res, next) => {
     try {
-        const term = await BaseTermModel.findById(id).exec();
-        res.status(200).json(term);
+        const isValid = ObjectId.isValid(req.params.id);
+        if (!isValid) {
+            return res.status(404).json({
+                message: "id url param must be a valid ObjectId",
+            });
+        }
+        const id = new ObjectId(req.params.id);
+
+        const term = await BaseTerms.find({ _id: id }).toArray();
+        return res.status(200).json(term);
     } catch (error) {
         next(error);
     }
 };
 
-type CreateBaseTermBody = {
-    name?: string;
-    facts?: object[];
-    category?: string;
-};
-
 export const createBaseTerm: RequestHandler<
     unknown,
     unknown,
-    CreateBaseTermBody,
+    BaseTermBaseDocument,
     unknown
 > = async (req, res, next) => {
-    const name = req.body.name;
-    const facts = req.body.facts;
-    const category = req.body.category;
     try {
-        const newBaseTerm = await BaseTermModel.create({
-            name: name,
-            facts: facts,
-            category: category,
-        });
+        await BaseTerms.insertOne(req.body);
 
-        res.status(201).json(newBaseTerm);
+        res.status(201).json(req.body);
     } catch (error) {
         next(error);
     }
