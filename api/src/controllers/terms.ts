@@ -1,6 +1,7 @@
 import { RequestHandler } from "express";
 import createHttpError from "http-errors";
 import { ObjectId } from "mongodb";
+import { BaseTerms } from "../models/baseTerm";
 import { ContractDocument, Contracts } from "../models/contract";
 import { TermBaseDocument, Terms } from "../models/term";
 import { assertIsDefined } from "../util/assertIsDefined";
@@ -98,20 +99,36 @@ export const getTerm: RequestHandler<
     }
 };
 
+interface CreateTermQueryParams {
+    contractId?: string;
+}
+
 export const createTerm: RequestHandler<
     unknown,
     unknown,
     TermBaseDocument,
-    unknown
+    CreateTermQueryParams
 > = async (req, res, next) => {
     const authenticatedUserId = req.session.userId;
     try {
         assertIsDefined(authenticatedUserId);
 
+        if (!req.query.contractId) {
+            return res.status(400).json({
+                message: "contractId query param must be provided",
+            });
+        }
+        if (!ObjectId.isValid(req.query.contractId)) {
+            return res.status(404).json({
+                message: "contractId query param must be a valid ObjectId",
+            });
+        }
+        const contractId = new ObjectId(req.query.contractId);
+
         const contracts = await Contracts.aggregate<ContractDocument>([
             {
                 $match: {
-                    _id: req.body.contractId,
+                    _id: contractId,
                 },
             },
             {
@@ -136,9 +153,26 @@ export const createTerm: RequestHandler<
             throw createHttpError(401, "You must be a party to this contract");
         }
 
-        await Terms.insertOne(req.body);
+        const { baseTermId, ...Term } = req.body;
 
-        res.status(201).json(req.body);
+        const baseTerm = await BaseTerms.findOne(
+            { _id: baseTermId },
+            { projection: { _id: 0 } }
+        );
+
+        if (!baseTerm) {
+            throw createHttpError(404, "Base term not found");
+        }
+
+        const term = {
+            ...Term,
+            baseTerm: baseTerm,
+            contractId: contractId,
+        };
+
+        await Terms.insertOne(term);
+
+        res.status(201).json(term);
     } catch (error) {
         next(error);
     }
